@@ -1,35 +1,16 @@
 #include <cmath>
 #include <vector>
 
+template <typename IndexType>
 class VectorN { // We will use VectorN as the index of n-dimensional array
     size_t dim;
-    std::vector<int> position;
-
-    static void rec(int depth, int bound, const VectorN& lastVector, std::vector<VectorN>& vecs) {
-        if (depth < 0) {
-            vecs.push_back(lastVector);
-            return;
-        }
-        for (int i = -bound; i <= bound; ++i) {
-            VectorN v = lastVector;
-            v[depth] = i;
-            rec(depth - 1, bound, v, vecs);
-        }
-    }
+    std::vector<IndexType> position;
 public:
 
-    static std::vector<VectorN> GetNeighbours(const size_t _dim) {
-        int bound = (int)std::ceil(std::sqrt(_dim));
-        std::vector<VectorN> ret;
-        std::vector<int> primary(_dim, 0);
-        rec((int)_dim - 1, bound, VectorN(primary), ret);
-        return ret;
-    }
-
     VectorN(size_t _dim): dim(_dim) , position(_dim) {  }
-    VectorN(const std::vector<int>& _position): dim(_position.size()), position(_position) {  }
-    int& operator [] (const size_t where) { return position[where]; }
-    const int& operator [] (const size_t where) const { return position[where]; }
+    VectorN(const std::vector<IndexType>& _position): dim(_position.size()), position(_position) {  }
+    IndexType& operator [] (const size_t where) { return position[where]; }
+    const IndexType& operator [] (const size_t where) const { return position[where]; }
 
     void operator = (const VectorN& vec) {
         dim = vec.dim;
@@ -43,7 +24,7 @@ public:
     // operators
     VectorN operator + (const VectorN& vec) const {
         if (dim != vec.dim) throw 2;
-        std::vector<int> ret(dim);
+        std::vector<IndexType> ret(dim);
         for (size_t i = 0; i != dim; ++i) {
             ret[i] = position[i] + vec.position[i];
         }
@@ -51,21 +32,22 @@ public:
     }
     VectorN operator - (const VectorN& vec) const {
         if (dim != vec.dim) throw 2;
-        std::vector<int> ret(dim);
+        std::vector<IndexType> ret(dim);
         for (size_t i = 0; i != dim; ++i) {
             ret[i] = position[i] - vec.position[i];
         }
         return VectorN(ret);
     }
-    VectorN operator * (const double k) const {
-        std::vector<int> ret(dim);
+    template <typename dtype>
+    VectorN operator * (const dtype k) const {
+        std::vector<IndexType> ret(dim);
         for (size_t i = 0; i != dim; ++i) {
             ret[i] = position[i] * k;
         }
         return VectorN(ret);
     }
-    VectorN operator / (const double k) const {
-        std::vector<int> ret(dim);
+    VectorN operator / (const dtype k) const {
+        std::vector<IndexType> ret(dim);
         for (size_t i = 0; i != dim; ++i) {
             ret[i] = position[i] / k;
         }
@@ -89,7 +71,7 @@ public:
         return std::sqrt(D2);
     }
 
-    bool InBoundary(int minval, int maxval) const {
+    bool InBoundary(IndexType minval, IndexType maxval) const {
         for (size_t i = 0; i != dim; ++i) {
             if (std::round(position[i]) < minval) return false;
             if (std::round(position[i]) >= maxval) return false;
@@ -97,35 +79,34 @@ public:
         return true;
     }
 
-    int ToInt(int dimLength) const {
-        int ret = 0;
+    IndexType ToIndex(IndexType dimLength) const {
+        IndexType ret = 0;
         for (size_t i = 0; i != dim; ++i) {
-            ret = ret * dimLength + (int)position[i];
+            ret = ret * dimLength + position[i];
         }
         return ret;
     }
-    void FromInt(int index, int dimLength) {
-        for (int i = (int)dim - 1; i >= 0; --i) {
-            position[i] = double(index % dimLength);
+    void FromInt(IndexType index, IndexType dimLength) {
+        for (int i = (IndexType)(dim - 1); i >= (IndexType)0; --i) {
+            position[i] = (IndexType)(index % dimLength);
             index /= dimLength;
         }
     }
 
     size_t GetDim() const { return dim; }
-    const std::vector<int>& GetPosition() const { return position; }
+    const std::vector<IndexType>& GetPosition() const { return position; }
 };
 
-template <typename T>
+template <typename dtype, typename IndexType>
 class ArrayN { // n-dimensional array
     size_t dim;
     size_t dimLength;
-    std::vector<T> data;
+    std::vector<dtype> data;
 public:
-    friend class VectorN;
     ArrayN(size_t _dim, size_t _dimLength) : dim(_dim), dimLength(_dimLength), data((size_t)std::pow(_dimLength, _dim)) {  }
-    ArrayN(size_t _dim, size_t _dimLength, const T& InitElement) : dim(_dim), dimLength(_dimLength), data((size_t)std::pow(_dimLength, _dim), InitElement) {  }
+    ArrayN(size_t _dim, size_t _dimLength, const dtype& InitElement) : dim(_dim), dimLength(_dimLength), data((size_t)std::pow(_dimLength, _dim), InitElement) {  }
 
-    T& At(const VectorN& pos) { // You can impletement operator[] instead
+    dtype& At(const VectorN<IndexType>& pos) { // You can impletement operator[] instead
         if (pos.GetDim() != dim) throw 3;
         return data[pos.ToInt(dimLength)];
     }
