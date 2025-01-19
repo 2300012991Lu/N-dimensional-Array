@@ -86,8 +86,8 @@ public:
         }
         return ret;
     }
-    void FromInt(IndexType index, IndexType dimLength) {
-        for (int i = (IndexType)(dim - 1); i >= (IndexType)0; --i) {
+    void FromIndex(IndexType index, IndexType dimLength) {
+        for (int i = (int)(dim - 1); i >= (int)0; --i) {
             position[i] = (IndexType)(index % dimLength);
             index /= dimLength;
         }
@@ -108,6 +108,6 @@ public:
 
     dtype& At(const VectorN<IndexType>& pos) { // You can impletement operator[] instead
         if (pos.GetDim() != dim) throw 3;
-        return data[pos.ToInt(dimLength)];
+        return data[pos.ToIndex(dimLength)];
     }
 };
